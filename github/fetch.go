@@ -2,18 +2,21 @@ package github
 
 import (
 	"github.com/jovandeginste/gr/common"
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	Name = "github"
 )
 
-func Fetch(org, project string, version common.Version) (*common.Release, error) {
+func Fetch(l *logrus.Logger, org, project string, version common.Version) (*common.Release, error) {
 	url := "https://api.github.com/repos/" + org + "/" + project + "/releases"
+
+	l.Debugf("URL is: '%s'", url)
 
 	var releases []release
 
-	if err := common.Fetch(url, &releases); err != nil {
+	if err := common.Fetch(l, url, &releases); err != nil {
 		return nil, err
 	}
 
@@ -60,8 +63,8 @@ func (a *asset) isReady() bool {
 	return a.State == "uploaded"
 }
 
-func (a *asset) asCommonAsset() common.Asset {
-	return common.Asset{
+func (a *asset) asCommonAsset() *common.Asset {
+	return &common.Asset{
 		Name:      a.Name,
 		URL:       a.BrowserDownloadURL,
 		Size:      a.Size,

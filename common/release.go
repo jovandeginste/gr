@@ -5,7 +5,7 @@ import "time"
 type Release struct {
 	Name        string
 	Version     string
-	Assets      []Asset
+	Assets      []*Asset
 	ReleaseType ReleaseType
 	CreatedAt   time.Time
 	PublishedAt time.Time

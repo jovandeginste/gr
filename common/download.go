@@ -8,7 +8,22 @@ import (
 	archiver "github.com/mholt/archiver/v3"
 )
 
-func (a *Asset) DownloadTo(destination string) error {
+type Destination struct {
+	Root        string
+	Binaries    string
+	Libraries   string
+	ManPages    string
+	Completions map[string]string
+}
+
+type detector struct {
+	binaries    []string
+	libraries   []string
+	manPages    []string
+	completions map[string][]string
+}
+
+func (a *Asset) DownloadTo(destination *Destination) error {
 	root, e := ioutil.TempDir(os.TempDir(), "gr-")
 	if e != nil {
 		return e
@@ -31,8 +46,17 @@ func (a *Asset) DownloadTo(destination string) error {
 		return err
 	}
 
-	a.Logger.Infof("Unpacking '%s' to '%s'...", file, extractDir)
+	a.Logger.Infof("Unpacking in '%s'...", extractDir)
 	if err := unpack(file, extractDir); err != nil {
+		return err
+	}
+
+	d := detector{}
+	if err := d.detect(extractDir); err != nil {
+		return err
+	}
+
+	if err := d.copyTo(destination); err != nil {
 		return err
 	}
 
@@ -41,4 +65,12 @@ func (a *Asset) DownloadTo(destination string) error {
 
 func unpack(file, extractDir string) error {
 	return archiver.Unarchive(file, extractDir)
+}
+
+func (d *detector) detect(dir string) error {
+	return nil
+}
+
+func (d *detector) copyTo(destination *Destination) error {
+	return nil
 }

@@ -28,6 +28,9 @@ github.com/klauspost/pgzip
 # github.com/mholt/archiver/v3 v3.5.0
 ## explicit
 github.com/mholt/archiver/v3
+# github.com/mitchellh/ioprogress v0.0.0-20180201004757-6a23b12fa88e
+## explicit
+github.com/mitchellh/ioprogress
 # github.com/nwaples/rardecode v1.1.0
 github.com/nwaples/rardecode
 # github.com/pierrec/lz4/v4 v4.0.3

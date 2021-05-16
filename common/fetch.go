@@ -5,13 +5,16 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"time"
 
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
+	"github.com/mitchellh/ioprogress"
 	"github.com/sirupsen/logrus"
 )
 
 func Fetch(l *logrus.Logger, url string, target interface{}) error {
-	res, err := httpClient(l, url)
+	_, res, err := httpClient(l, url)
 	if err != nil {
 		return err
 	}
@@ -40,29 +43,45 @@ func Download(l *logrus.Logger, url string, target string) error {
 
 	defer outFile.Close()
 
-	res, err := httpClient(l, url)
+	s, res, err := httpClient(l, url)
 	if err != nil {
 		return err
 	}
+
+	l.Infof("Downloading '%s' (%d bytes)...", url, s)
+	l.Infof("To '%s'...", target)
 
 	if res == nil {
 		return nil
 	}
 
-	_, err = io.Copy(outFile, res)
+	progressR := &ioprogress.Reader{
+		Reader:       res,
+		Size:         s,
+		DrawFunc:     ioprogress.DrawTerminalf(os.Stdout, ioprogress.DrawTextFormatBar(100)),
+		DrawInterval: 50 * time.Millisecond,
+	}
+
+	_, err = io.Copy(outFile, progressR)
 
 	return err
 }
 
-func httpClient(l *logrus.Logger, url string) (io.ReadCloser, error) {
+func httpClient(l *logrus.Logger, url string) (int64, io.ReadCloser, error) {
 	c := retryablehttp.NewClient()
 	c.RetryMax = 3
 	c.Logger = l
 
 	res, err := c.Get(url)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	return res.Body, nil
+	contentLengthHeader := res.Header.Get("Content-Length")
+	size, err := strconv.ParseInt(contentLengthHeader, 10, 64)
+	if err != nil {
+		size = -1
+	}
+
+	return size, res.Body, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 type Fetcher struct {
-	Destination string
+	Destination *common.Destination
 	Host        string
 	Org         string
 	Project     string

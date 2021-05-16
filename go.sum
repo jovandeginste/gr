@@ -22,6 +22,8 @@ github.com/klauspost/pgzip v1.2.4 h1:TQ7CNpYKovDOmqzRHKxJh0BeaBI7UdQZYc6p7pMQh1A
 github.com/klauspost/pgzip v1.2.4/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/mholt/archiver/v3 v3.5.0 h1:nE8gZIrw66cu4osS/U7UW7YDuGMHssxKutU8IfWxwWE=
 github.com/mholt/archiver/v3 v3.5.0/go.mod h1:qqTTPUK/HZPFgFQ/TJ3BzvTpF/dPtFVJXdQbCmeMxwc=
+github.com/mitchellh/ioprogress v0.0.0-20180201004757-6a23b12fa88e h1:Qa6dnn8DlasdXRnacluu8HzPts0S1I9zvvUPDbBnXFI=
+github.com/mitchellh/ioprogress v0.0.0-20180201004757-6a23b12fa88e/go.mod h1:waEya8ee1Ro/lgxpVhkJI4BVASzkm3UZqkx/cFJiYHM=
 github.com/nwaples/rardecode v1.1.0 h1:vSxaY8vQhOcVr4mm5e8XllHWTiM4JF507A0Katqw7MQ=
 github.com/nwaples/rardecode v1.1.0/go.mod h1:5DzqNKiOdpKKBH87u8VlvAnPZMXcGRhxWkRpHbbfGS0=
 github.com/pierrec/lz4/v4 v4.0.3 h1:vNQKSVZNYUEAvRY9FaUXAF1XPbSOHJtDTiP41kzDz2E=

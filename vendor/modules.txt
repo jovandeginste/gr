@@ -1,15 +1,52 @@
+# github.com/andybalholm/brotli v1.0.0
+github.com/andybalholm/brotli
+# github.com/dsnet/compress v0.0.1
+github.com/dsnet/compress
+github.com/dsnet/compress/bzip2
+github.com/dsnet/compress/bzip2/internal/sais
+github.com/dsnet/compress/internal
+github.com/dsnet/compress/internal/errors
+github.com/dsnet/compress/internal/prefix
+# github.com/golang/snappy v0.0.3
+## explicit
+github.com/golang/snappy
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-retryablehttp v0.7.0
 ## explicit
 github.com/hashicorp/go-retryablehttp
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+# github.com/klauspost/compress v1.10.10
+github.com/klauspost/compress/flate
+github.com/klauspost/compress/fse
+github.com/klauspost/compress/gzip
+github.com/klauspost/compress/huff0
+github.com/klauspost/compress/snappy
+github.com/klauspost/compress/zstd
+github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/klauspost/pgzip v1.2.4
+github.com/klauspost/pgzip
+# github.com/mholt/archiver/v3 v3.5.0
 ## explicit
+github.com/mholt/archiver/v3
+# github.com/nwaples/rardecode v1.1.0
+github.com/nwaples/rardecode
+# github.com/pierrec/lz4/v4 v4.0.3
+github.com/pierrec/lz4/v4
+github.com/pierrec/lz4/v4/internal/lz4block
+github.com/pierrec/lz4/v4/internal/lz4errors
+github.com/pierrec/lz4/v4/internal/lz4stream
+github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
-# github.com/stretchr/objx v0.1.1
+# github.com/ulikunitz/xz v0.5.10
 ## explicit
+github.com/ulikunitz/xz
+github.com/ulikunitz/xz/internal/hash
+github.com/ulikunitz/xz/internal/xlog
+github.com/ulikunitz/xz/lzma
+# github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
+github.com/xi2/xz
 # golang.org/x/mod v0.4.2
 ## explicit
 golang.org/x/mod/semver

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"path"
 
 	"github.com/jovandeginste/gr/common"
 	"github.com/jovandeginste/gr/github"
@@ -60,6 +61,8 @@ func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
 		if a.MatchSystem() {
 			if f.Preferences == nil || f.Preferences.MatchAsset(a) {
 				a.Logger = f.Logger
+				a.PackageName = f.Name()
+				a.Version = r.Version
 
 				return a, nil
 			}
@@ -71,4 +74,8 @@ func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
 
 func (f *Fetcher) fetchGithub() (*common.Release, error) {
 	return github.Fetch(f.Logger, f.Org, f.Project, f.Version)
+}
+
+func (f *Fetcher) Name() string {
+	return path.Join(f.Host, f.Org, f.Project)
 }

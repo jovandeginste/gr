@@ -78,6 +78,7 @@ func httpClient(l *logrus.Logger, url string) (int64, io.ReadCloser, error) {
 	}
 
 	contentLengthHeader := res.Header.Get("Content-Length")
+
 	size, err := strconv.ParseInt(contentLengthHeader, 10, 64)
 	if err != nil {
 		size = -1

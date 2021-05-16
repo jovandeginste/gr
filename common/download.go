@@ -1,20 +1,12 @@
 package common
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-
-	archiver "github.com/mholt/archiver/v3"
+	"path/filepath"
 )
-
-type Destination struct {
-	Root        string
-	Binaries    string
-	Libraries   string
-	ManPages    string
-	Completions map[string]string
-}
 
 type detector struct {
 	binaries    []string
@@ -24,29 +16,34 @@ type detector struct {
 }
 
 func (a *Asset) DownloadTo(destination *Destination) error {
-	root, e := ioutil.TempDir(os.TempDir(), "gr-")
-	if e != nil {
-		return e
+	if a.Exists(destination) {
+		return fmt.Errorf("%w: %s/%s", ErrAlreadyDownloaded, a.PackageName, a.Version)
+	}
+
+	root := destination.GetTmpDir()
+	if err := ensureDir(root); err != nil {
+		return err
+	}
+
+	root, err := ioutil.TempDir(root, "gr-")
+	if err != nil {
+		return err
 	}
 
 	defer os.RemoveAll(root)
 
-	downloadDir := path.Join(root, "download")
-	if err := os.Mkdir(downloadDir, 0o700); err != nil {
+	extractDir := destination.GetPackageDirFor(a)
+	if err := ensureDir(extractDir); err != nil {
 		return err
 	}
 
-	extractDir := path.Join(root, "extract")
-	if err := os.Mkdir(extractDir, 0o700); err != nil {
-		return err
-	}
-
-	file := path.Join(downloadDir, a.Name)
+	file := path.Join(root, a.Name)
 	if err := Download(a.Logger, a.URL, file); err != nil {
 		return err
 	}
 
 	a.Logger.Infof("Unpacking in '%s'...", extractDir)
+
 	if err := unpack(file, extractDir); err != nil {
 		return err
 	}
@@ -63,11 +60,21 @@ func (a *Asset) DownloadTo(destination *Destination) error {
 	return nil
 }
 
-func unpack(file, extractDir string) error {
-	return archiver.Unarchive(file, extractDir)
+func (d *detector) detect(dir string) error {
+	return filepath.Walk(dir, d.detectFile)
 }
 
-func (d *detector) detect(dir string) error {
+func (d *detector) detectFile(p string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+
+	fmt.Println(p, isExec(info.Mode().Perm()))
+
 	return nil
 }
 

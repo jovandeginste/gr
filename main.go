@@ -6,16 +6,12 @@ import (
 )
 
 func main() {
-	d := common.Destination{
-		Root: "~/tmp",
-	}
-
 	f := app.Fetcher{
 		Host:        "github",
-		Org:         "zellij-org",
-		Project:     "zellij",
+		Org:         "BurntSushi",
+		Project:     "ripgrep",
 		Version:     common.VersionLatestRelease(),
-		Destination: &d,
+		Destination: common.NewDestination("~/tmp/gr"),
 	}
 
 	if err := f.Fetch(); err != nil {

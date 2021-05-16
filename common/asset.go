@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -9,11 +10,13 @@ import (
 )
 
 type Asset struct {
-	Name      string
-	URL       string
-	Size      int
-	CreatedAt time.Time
-	Logger    *logrus.Logger
+	PackageName string
+	Version     string
+	Name        string
+	URL         string
+	Size        int
+	CreatedAt   time.Time
+	Logger      *logrus.Logger
 }
 
 func (a *Asset) MatchSystem() bool {
@@ -45,25 +48,25 @@ func (a *Asset) MatchArch() bool {
 func (a *Asset) MatchOS() bool {
 	switch runtime.GOOS {
 	case "windows":
-		return matchWindows(a)
+		return a.matchWindows()
 	case "darwin":
-		return matchDarwin(a)
+		return a.matchDarwin()
 	case "linux":
-		return matchLinux(a)
+		return a.matchLinux()
 	default:
 		return false
 	}
 }
 
-func matchLinux(a *Asset) bool {
+func (a *Asset) matchLinux() bool {
 	return strings.Contains(a.Name, "-linux-")
 }
 
-func matchDarwin(a *Asset) bool {
+func (a *Asset) matchDarwin() bool {
 	return strings.Contains(a.Name, "-darwin-")
 }
 
-func matchWindows(a *Asset) bool {
+func (a *Asset) matchWindows() bool {
 	if strings.Contains(a.Name, "-win32-") {
 		return true
 	}
@@ -73,4 +76,12 @@ func matchWindows(a *Asset) bool {
 	}
 
 	return false
+}
+
+func (a *Asset) Exists(destination *Destination) bool {
+	extractDir := destination.GetPackageDirFor(a)
+
+	_, err := os.Stat(extractDir)
+
+	return !os.IsNotExist(err)
 }

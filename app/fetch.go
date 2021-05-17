@@ -52,6 +52,14 @@ func (f *Fetcher) Fetch() error {
 
 	r.PackageName = f.Name()
 
+	if r.Exists(f.Destination) {
+		return fmt.Errorf("%w: %s/%s", common.ErrAlreadyDownloaded, r.PackageName, r.Version)
+	}
+
+	if err := f.Destination.EnsureDirs(); err != nil {
+		return err
+	}
+
 	a, err := f.findAsset(r)
 	if err != nil {
 		return err
@@ -61,7 +69,11 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	return r.DownloadSourceArchiveTo(f.Destination)
+	if err := r.DownloadSourceArchiveTo(f.Destination); err != nil {
+		return err
+	}
+
+	return r.Detect(f.Destination)
 }
 
 func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {

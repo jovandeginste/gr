@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -47,11 +46,6 @@ func (r *Release) Match(v Version) bool {
 }
 
 func (r *Release) DownloadSourceArchiveTo(destination *Destination) error {
-	extractDir := destination.GetSourceDirFor(r)
-	if _, err := os.Stat(extractDir); os.IsExist(err) {
-		return fmt.Errorf("%w: %s/%s", ErrAlreadyDownloaded, r.Name, r.Version)
-	}
-
 	root := destination.GetTmpDir()
 	if err := ensureDir(root); err != nil {
 		return err
@@ -64,6 +58,7 @@ func (r *Release) DownloadSourceArchiveTo(destination *Destination) error {
 
 	defer os.RemoveAll(root)
 
+	extractDir := destination.GetSourceDirFor(r)
 	if err := ensureDir(extractDir); err != nil {
 		return err
 	}
@@ -80,4 +75,12 @@ func (r *Release) DownloadSourceArchiveTo(destination *Destination) error {
 	}
 
 	return nil
+}
+
+func (r *Release) Exists(destination *Destination) bool {
+	extractDir := destination.GetPackageDirFor(r.PackageName, r.Version)
+
+	_, err := os.Stat(extractDir)
+
+	return err == nil || os.IsExist(err)
 }

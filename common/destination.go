@@ -26,11 +26,31 @@ func NewDestination(root string) *Destination {
 		ManPagesDir: path.Join(root, "man"),
 		TmpDir:      path.Join(root, "tmp"),
 		CompletionDirs: map[string]string{
-			"bash": path.Join(root, "bash.completions.d"),
-			"zsh":  path.Join(root, "zsh.completions.d"),
-			"fish": path.Join(root, "fish.completions.d"),
+			"bash": path.Join(root, "completions.d", "bash"),
+			"zsh":  path.Join(root, "completions.d", "zsh"),
+			"fish": path.Join(root, "completions.d", "fish"),
 		},
 	}
+}
+
+func (d *Destination) EnsureDirs() error {
+	dirs := []string{
+		d.GetPackagesDir(),
+		d.GetTmpDir(),
+		d.GetBinDir(),
+		d.GetLibDir(),
+		d.GetManPagesDir(),
+	}
+
+	dirs = append(dirs, d.GetAllCompletionDirs()...)
+
+	for _, d := range dirs {
+		if err := ensureDir(d); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d *Destination) GetPackagesDir() string {
@@ -53,6 +73,16 @@ func (d *Destination) GetManPagesDir() string {
 	return expand(d.ManPagesDir)
 }
 
+func (d *Destination) GetAllCompletionDirs() []string {
+	res := []string{}
+
+	for k, _ := range d.CompletionDirs {
+		res = append(res, d.GetCompletionDir(k))
+	}
+
+	return res
+}
+
 func (d *Destination) GetCompletionDir(shell string) string {
 	c, ok := d.CompletionDirs[shell]
 	if !ok {
@@ -62,10 +92,14 @@ func (d *Destination) GetCompletionDir(shell string) string {
 	return expand(c)
 }
 
+func (d *Destination) GetPackageDirFor(name, version string) string {
+	return path.Join(d.GetPackagesDir(), name, version)
+}
+
 func (d *Destination) GetReleaseDirFor(a *Asset) string {
-	return path.Join(d.GetPackagesDir(), a.PackageName, a.Version, "release")
+	return path.Join(d.GetPackageDirFor(a.PackageName, a.Version), "release")
 }
 
 func (d *Destination) GetSourceDirFor(r *Release) string {
-	return path.Join(d.GetPackagesDir(), r.PackageName, r.Version, "source")
+	return path.Join(d.GetPackageDirFor(r.PackageName, r.Version), "source")
 }

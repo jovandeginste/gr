@@ -1,7 +1,9 @@
 package common
 
 import (
+	"io/ioutil"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"time"
@@ -78,10 +80,30 @@ func (a *Asset) matchWindows() bool {
 	return false
 }
 
-func (a *Asset) Exists(destination *Destination) bool {
+func (a *Asset) DownloadTo(destination *Destination) error {
+	root := destination.GetTmpDir()
+	if err := ensureDir(root); err != nil {
+		return err
+	}
+
+	root, err := ioutil.TempDir(root, "gr-")
+	if err != nil {
+		return err
+	}
+
+	defer os.RemoveAll(root)
+
 	extractDir := destination.GetReleaseDirFor(a)
+	if err := ensureDir(extractDir); err != nil {
+		return err
+	}
 
-	_, err := os.Stat(extractDir)
+	file := path.Join(root, a.Name)
+	if err := Download(a.Logger, a.URL, file); err != nil {
+		return err
+	}
 
-	return !os.IsNotExist(err)
+	a.Logger.Infof("Unpacking in '%s'...", extractDir)
+
+	return unpack(file, extractDir)
 }

@@ -3,7 +3,8 @@ package common
 import (
 	"os"
 
-	"github.com/gabriel-vasile/mimetype"
+	"github.com/h2non/filetype"
+	"github.com/h2non/filetype/types"
 	"github.com/mholt/archiver/v3"
 	"github.com/mitchellh/go-homedir"
 )
@@ -45,11 +46,11 @@ func readNFile(p string, n uint32) ([]byte, error) {
 
 	byteSlice := make([]byte, n)
 
-	_, err = file.Read(byteSlice)
+	size, err := file.Read(byteSlice)
 
-	return byteSlice, err
+	return byteSlice[:size], err
 }
 
-func readElf(file string) (*mimetype.MIME, error) {
-	return mimetype.DetectFile(file)
+func readElf(data []byte) (types.Type, error) {
+	return filetype.Match(data)
 }

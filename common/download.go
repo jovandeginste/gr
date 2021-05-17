@@ -75,12 +75,12 @@ func (d *detector) detectFile(file string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	data, err := readNFile(file, 128*1024)
+	data, err := readNFile(file, 1*1024*1024)
 	if err != nil {
 		return err
 	}
 
-	elfInfo, err := readElf(file)
+	elfInfo, err := readElf(data)
 	if err != nil {
 		return err
 	}

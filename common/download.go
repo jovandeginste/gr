@@ -34,7 +34,7 @@ func (a *Asset) DownloadTo(destination *Destination) error {
 
 	defer os.RemoveAll(root)
 
-	extractDir := destination.GetPackageDirFor(a)
+	extractDir := destination.GetReleaseDirFor(a)
 	if err := ensureDir(extractDir); err != nil {
 		return err
 	}

@@ -9,8 +9,16 @@ const (
 	Name = "github"
 )
 
+func releasesURLFor(org, project string) string {
+	return "https://api.github.com/repos/" + org + "/" + project + "/releases"
+}
+
+func (r *release) archiveURL() string {
+	return r.TarballURL
+}
+
 func Fetch(l *logrus.Logger, org, project string, version common.Version) (*common.Release, error) {
-	url := "https://api.github.com/repos/" + org + "/" + project + "/releases"
+	url := releasesURLFor(org, project)
 
 	l.Debugf("URL is: '%s'", url)
 
@@ -35,11 +43,12 @@ func Fetch(l *logrus.Logger, org, project string, version common.Version) (*comm
 
 func (r *release) asCommonRelease() common.Release {
 	c := common.Release{
-		Name:        r.Name,
-		Version:     r.TagName,
-		ReleaseType: common.ReleaseTypeRelease,
-		CreatedAt:   r.CreatedAt,
-		PublishedAt: r.PublishedAt,
+		Name:          r.Name,
+		Version:       r.TagName,
+		ReleaseType:   common.ReleaseTypeRelease,
+		CreatedAt:     r.CreatedAt,
+		PublishedAt:   r.PublishedAt,
+		SourceArchive: r.archiveURL(),
 	}
 
 	for _, a := range r.Assets {

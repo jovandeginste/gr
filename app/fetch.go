@@ -40,6 +40,8 @@ func (f *Fetcher) Fetch() error {
 		return fmt.Errorf("%w: '%s'", common.ErrHostNotKnown, f.Host)
 	}
 
+	r.Logger = f.Logger
+
 	if err != nil {
 		return err
 	}
@@ -48,12 +50,18 @@ func (f *Fetcher) Fetch() error {
 		return common.ErrNoMatchingRelease
 	}
 
+	r.PackageName = f.Name()
+
 	a, err := f.findAsset(r)
 	if err != nil {
 		return err
 	}
 
-	return a.DownloadTo(f.Destination)
+	if err := a.DownloadTo(f.Destination); err != nil {
+		return err
+	}
+
+	return r.DownloadSourceArchiveTo(f.Destination)
 }
 
 func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {

@@ -7,6 +7,7 @@ import (
 type Destination struct {
 	Root           string
 	PackagesDir    string
+	SourcesDir     string
 	BinDir         string
 	LibDir         string
 	ManPagesDir    string
@@ -61,6 +62,10 @@ func (d *Destination) GetCompletionDir(shell string) string {
 	return expand(c)
 }
 
-func (d *Destination) GetPackageDirFor(a *Asset) string {
-	return path.Join(d.GetPackagesDir(), a.PackageName, a.Version)
+func (d *Destination) GetReleaseDirFor(a *Asset) string {
+	return path.Join(d.GetPackagesDir(), a.PackageName, a.Version, "release")
+}
+
+func (d *Destination) GetSourceDirFor(r *Release) string {
+	return path.Join(d.GetPackagesDir(), r.PackageName, r.Version, "source")
 }

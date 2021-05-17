@@ -17,4 +17,16 @@ func main() {
 	if err := f.Fetch(); err != nil {
 		panic(err)
 	}
+
+	f = app.Fetcher{
+		Host:        "github",
+		Org:         "dandavison",
+		Project:     "delta",
+		Version:     common.VersionLatestRelease(),
+		Destination: common.NewDestination("~/tmp/gr"),
+	}
+
+	if err := f.Fetch(); err != nil {
+		panic(err)
+	}
 }

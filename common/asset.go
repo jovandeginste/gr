@@ -79,7 +79,7 @@ func (a *Asset) matchWindows() bool {
 }
 
 func (a *Asset) Exists(destination *Destination) bool {
-	extractDir := destination.GetPackageDirFor(a)
+	extractDir := destination.GetReleaseDirFor(a)
 
 	_, err := os.Stat(extractDir)
 

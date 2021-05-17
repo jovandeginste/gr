@@ -55,6 +55,12 @@ func Download(l *logrus.Logger, url string, target string) error {
 		return nil
 	}
 
+	if s <= 0 {
+		_, err = io.Copy(outFile, res)
+
+		return err
+	}
+
 	progressR := &ioprogress.Reader{
 		Reader:       res,
 		Size:         s,
@@ -81,7 +87,7 @@ func httpClient(l *logrus.Logger, url string) (int64, io.ReadCloser, error) {
 
 	size, err := strconv.ParseInt(contentLengthHeader, 10, 64)
 	if err != nil {
-		size = -1
+		size = 0
 	}
 
 	return size, res.Body, nil

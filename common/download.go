@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/go-enry/go-enry/v2"
 )
 
 type detector struct {
@@ -64,7 +66,7 @@ func (d *detector) detect(dir string) error {
 	return filepath.Walk(dir, d.detectFile)
 }
 
-func (d *detector) detectFile(p string, info os.FileInfo, err error) error {
+func (d *detector) detectFile(file string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
@@ -73,7 +75,20 @@ func (d *detector) detectFile(p string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	fmt.Println(p, isExec(info.Mode().Perm()))
+	data, err := readNFile(file, 128*1024)
+	if err != nil {
+		return err
+	}
+
+	elfInfo, err := readElf(file)
+	if err != nil {
+		return err
+	}
+
+	lang := enry.GetLanguage(file, data)
+
+	fmt.Println(file, isExec(info.Mode().Perm()), lang)
+	fmt.Printf("%#v\n", elfInfo)
 
 	return nil
 }

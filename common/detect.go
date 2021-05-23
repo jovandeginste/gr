@@ -156,6 +156,7 @@ func (d *detector) linkAll(files []string, destination string, prefix string) er
 		}
 
 		d.logger.Infof("Linking: '%s' to '%s'", b, target)
+
 		if err := os.Link(b, target); err != nil {
 			return err
 		}

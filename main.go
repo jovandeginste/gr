@@ -2,10 +2,10 @@ package main
 
 import (
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/jovandeginste/gr/app"
-	"github.com/jovandeginste/gr/common"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -24,8 +24,10 @@ func main() {
 
 	myInit(cmdRoot)
 
+	a.SetDestination(d)
+
 	if err := cmdRoot.Execute(); err != nil {
-		log.Fatal(err)
+		log().Fatal(err)
 	}
 }
 
@@ -43,15 +45,41 @@ func myInit(cmdRoot *cobra.Command) {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			a.Destination = common.NewDestination(d)
-
-			f.ParseURL(args[0])
-			if err := f.Fetch(); err != nil {
-				a.Logger.Fatal(err)
-			}
+			parse(args[0])
 		},
 	}
 	cmdFetch.Flags().BoolVar(&f.Retry, "retry", false, "Whether to remove existing version")
 
+	cmdList := &cobra.Command{
+		Use:   "list",
+		Short: "List currently installed software packages",
+		Run: func(cmd *cobra.Command, args []string) {
+			list()
+		},
+	}
+
 	cmdRoot.AddCommand(cmdFetch)
+	cmdRoot.AddCommand(cmdList)
+}
+
+func log() *logrus.Logger {
+	return a.Logger
+}
+
+func parse(u string) {
+	if err := f.ParseURL(u); err != nil {
+		log().Fatal(err)
+	}
+
+	if err := f.Fetch(); err != nil {
+		log().Fatal(err)
+	}
+}
+
+func list() {
+	fmt.Println("Currently installed packages:")
+
+	for _, p := range a.List() {
+		fmt.Printf("- %s\n", p)
+	}
 }

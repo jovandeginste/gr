@@ -80,7 +80,9 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	r.Logger = f.Logger()
+	if f.Logger() != nil {
+		r.Logger = f.Logger()
+	}
 
 	if r == nil {
 		return common.ErrNoMatchingRelease
@@ -107,15 +109,7 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	if err := a.DownloadTo(f.Destination()); err != nil {
-		return err
-	}
-
-	if err := r.DownloadSourceArchiveTo(f.Destination()); err != nil {
-		return err
-	}
-
-	if err := r.Detect(f.Destination()); err != nil {
+	if err := f.download(a, r); err != nil {
 		return err
 	}
 
@@ -146,4 +140,20 @@ func (f *Fetcher) fetchGithub() (*common.Release, error) {
 
 func (f *Fetcher) Name() string {
 	return strings.Join([]string{f.Host, strings.ReplaceAll(f.Project, "/", ".")}, ".")
+}
+
+func (f *Fetcher) download(a *common.Asset, r *common.Release) error {
+	if err := a.DownloadTo(f.Destination()); err != nil {
+		return err
+	}
+
+	if err := r.DownloadSourceArchiveTo(f.Destination()); err != nil {
+		return err
+	}
+
+	if err := r.Detect(f.Destination()); err != nil {
+		return err
+	}
+
+	return nil
 }

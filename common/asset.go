@@ -34,12 +34,12 @@ func (a *Asset) MatchSystem() bool {
 }
 
 func (a *Asset) MatchArch() bool {
-	if strings.Contains(a.Name, "-"+runtime.GOARCH+"-") {
+	if strings.Contains(a.Name, runtime.GOARCH) {
 		return true
 	}
 
 	if runtime.GOARCH == "amd64" {
-		if strings.Contains(a.Name, "-x86_64-") {
+		if strings.Contains(a.Name, "x86_64") {
 			return true
 		}
 	}
@@ -61,15 +61,15 @@ func (a *Asset) MatchOS() bool {
 }
 
 func (a *Asset) matchLinux() bool {
-	return strings.Contains(a.Name, "-linux-")
+	return strings.Contains(a.Name, "linux")
 }
 
 func (a *Asset) matchDarwin() bool {
-	return strings.Contains(a.Name, "-darwin-")
+	return strings.Contains(a.Name, "darwin")
 }
 
 func (a *Asset) matchWindows() bool {
-	if strings.Contains(a.Name, "-win32-") {
+	if strings.Contains(a.Name, "win32") {
 		return true
 	}
 

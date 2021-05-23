@@ -42,6 +42,10 @@ func (a *Asset) MatchArch() bool {
 		if strings.Contains(a.Name, "x86_64") {
 			return true
 		}
+
+		if strings.Contains(a.Name, "AppImage") {
+			return true
+		}
 	}
 
 	return false
@@ -61,6 +65,10 @@ func (a *Asset) MatchOS() bool {
 }
 
 func (a *Asset) matchLinux() bool {
+	if strings.Contains(a.Name, "AppImage") {
+		return true
+	}
+
 	return strings.Contains(a.Name, "linux")
 }
 
@@ -103,7 +111,17 @@ func (a *Asset) DownloadTo(destination *Destination) error {
 		return err
 	}
 
-	a.Logger.Debugf("Unpacking in '%s'...", extractDir)
+	if isArchive(file) {
+		a.Logger.Debugf("Unpacking in '%s'...", extractDir)
 
-	return unpack(file, extractDir)
+		return unpack(file, extractDir)
+	}
+
+	if isAppImage(file) {
+		a.Logger.Debugf("Copying to '%s'...", extractDir)
+
+		return moveAppImage(file, extractDir)
+	}
+
+	return nil
 }

@@ -2,6 +2,8 @@ package common
 
 import (
 	"os"
+	"path"
+	"strings"
 
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
@@ -13,6 +15,29 @@ func expand(dir string) string {
 	dir, _ = homedir.Expand(dir) //nolint:errcheck
 
 	return dir
+}
+
+func isAppImage(file string) bool {
+	return strings.HasSuffix(file, ".AppImage")
+}
+
+func isArchive(file string) bool {
+	_, err := archiver.ByExtension(file)
+
+	return err == nil
+}
+
+func moveAppImage(file, extractDir string) error {
+	b := path.Base(file)
+	b = strings.TrimSuffix(b, ".AppImage")
+
+	target := path.Join(extractDir, b)
+
+	if err := os.Chmod(file, 0o700); err != nil {
+		return err
+	}
+
+	return os.Rename(file, target)
 }
 
 func unpack(file, extractDir string) error {

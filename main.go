@@ -55,6 +55,7 @@ func myInit(cmdRoot *cobra.Command) {
 			}
 		},
 	}
+	cmdFetch.Flags().BoolVar(&f.Retry, "retry", false, "Whether to remove existing version")
 
 	cmdRoot.AddCommand(cmdFetch)
 }

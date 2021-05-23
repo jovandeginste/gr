@@ -14,6 +14,7 @@ type Fetcher struct {
 	Destination *common.Destination
 	Host        string
 	Project     string
+	Retry       bool
 	Version     *common.Version
 	Preferences *common.Preferences
 	Logger      *logrus.Logger
@@ -85,6 +86,10 @@ func (f *Fetcher) Fetch() error {
 	r.PackageName = f.Name()
 
 	if r.Exists(f.Destination) {
+		if !f.Retry {
+			return fmt.Errorf("%w: %s/%s", common.ErrAlreadyDownloaded, r.PackageName, r.Version)
+		}
+
 		if err = r.Purge(f.Destination); err != nil {
 			return err
 		}

@@ -17,7 +17,7 @@ func (r *release) archiveURL() string {
 	return r.TarballURL
 }
 
-func Fetch(l *logrus.Logger, org, project string, version common.Version) (*common.Release, error) {
+func Fetch(l *logrus.Logger, org, project string, version *common.Version) (*common.Release, error) {
 	url := releasesURLFor(org, project)
 
 	l.Debugf("URL is: '%s'", url)

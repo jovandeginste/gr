@@ -29,7 +29,11 @@ const (
 	ReleaseTypeDraft      ReleaseType = "draft"
 )
 
-func (r *Release) Match(v Version) bool {
+func (r *Release) Match(v *Version) bool {
+	if v == nil {
+		return true
+	}
+
 	if !v.AllowRelease && r.ReleaseType == ReleaseTypeRelease {
 		return false
 	}
@@ -83,4 +87,14 @@ func (r *Release) Exists(destination *Destination) bool {
 	_, err := os.Stat(extractDir)
 
 	return err == nil || os.IsExist(err)
+}
+
+func (r *Release) Purge(destination *Destination) error {
+	extractDir := destination.GetPackageDirFor(r.PackageName, r.Version)
+
+	r.Logger.Infof("Removing package dir '%s'...", extractDir)
+
+	err := os.RemoveAll(extractDir)
+
+	return err
 }

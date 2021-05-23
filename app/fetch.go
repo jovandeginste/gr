@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"path"
+	"strings"
 
 	"github.com/jovandeginste/gr/common"
 	"github.com/jovandeginste/gr/github"
@@ -14,12 +14,16 @@ type Fetcher struct {
 	Host        string
 	Org         string
 	Project     string
-	Version     common.Version
+	Version     *common.Version
 	Preferences *common.Preferences
 	Logger      *logrus.Logger
 }
 
 func (f *Fetcher) init() {
+	if f.Version == nil {
+		f.Version = common.VersionLatestRelease()
+	}
+
 	if f.Logger == nil {
 		f.Logger = logrus.New()
 	}
@@ -53,10 +57,12 @@ func (f *Fetcher) Fetch() error {
 	r.PackageName = f.Name()
 
 	if r.Exists(f.Destination) {
-		return fmt.Errorf("%w: %s/%s", common.ErrAlreadyDownloaded, r.PackageName, r.Version)
+		if err = r.Purge(f.Destination); err != nil {
+			return err
+		}
 	}
 
-	if err := f.Destination.EnsureDirs(); err != nil {
+	if err = f.Destination.EnsureDirs(); err != nil {
 		return err
 	}
 
@@ -97,5 +103,5 @@ func (f *Fetcher) fetchGithub() (*common.Release, error) {
 }
 
 func (f *Fetcher) Name() string {
-	return path.Join(f.Host, f.Org, f.Project)
+	return strings.Join([]string{f.Host, f.Org, f.Project}, ".")
 }

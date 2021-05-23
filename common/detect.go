@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-enry/go-enry/v2"
@@ -14,9 +15,10 @@ import (
 var shells = []string{"bash", "fish", "zsh"}
 
 type detector struct {
+	name        string
 	binaries    []string
 	libraries   []string
-	manPages    []string
+	manPages    map[string][]string
 	completions map[string][]string
 }
 
@@ -24,8 +26,11 @@ func (r *Release) Detect(destination *Destination) error {
 	packageDir := destination.GetPackageDirFor(r.PackageName, r.Version)
 
 	d := detector{
+		name:        r.PackageName,
+		manPages:    map[string][]string{},
 		completions: map[string][]string{},
 	}
+
 	if err := d.detect(packageDir); err != nil {
 		return err
 	}
@@ -75,7 +80,7 @@ func (d *detector) addToCatalog(file string, lang string, elfInfo types.Type) {
 	}
 
 	if lang == "Roff Manpage" {
-		d.manPages = append(d.manPages, file)
+		d.addManPage(file)
 
 		return
 	}
@@ -94,22 +99,43 @@ func (d *detector) addToCatalog(file string, lang string, elfInfo types.Type) {
 	fmt.Printf("%#v\n", elfInfo)
 }
 
+func (d *detector) addManPage(file string) {
+	ss := strings.Split(file, ".")
+	r := "man1"
+
+	for i := len(ss) - 1; i > 0; i-- {
+		s := ss[i]
+		if n, err := strconv.Atoi(s); err == nil {
+			if n > 0 && n < 10 {
+				r = "man" + s
+
+				break
+			}
+		}
+	}
+
+	d.manPages[r] = append(d.manPages[r], file)
+}
+
 func (d *detector) copyTo(destination *Destination) error {
 	fmt.Printf("%#v\n", d)
-	if err := linkAll(d.binaries, destination.GetBinDir()); err != nil {
+
+	if err := linkAll(d.binaries, destination.GetBinDir(), ""); err != nil {
 		return err
 	}
 
-	if err := linkAll(d.manPages, destination.GetManPagesDir()); err != nil {
-		return err
+	for k, v := range d.manPages {
+		if err := linkAll(v, path.Join(destination.GetManPagesDir(), k), ""); err != nil {
+			return err
+		}
 	}
 
-	if err := linkAll(d.libraries, destination.GetLibDir()); err != nil {
+	if err := linkAll(d.libraries, destination.GetLibDir(), ""); err != nil {
 		return err
 	}
 
 	for k, v := range d.completions {
-		if err := linkAll(v, destination.GetCompletionDir(k)); err != nil {
+		if err := linkAll(v, destination.GetCompletionDir(k), d.name+"."); err != nil {
 			return err
 		}
 	}
@@ -117,9 +143,9 @@ func (d *detector) copyTo(destination *Destination) error {
 	return nil
 }
 
-func linkAll(files []string, destination string) error {
+func linkAll(files []string, destination string, prefix string) error {
 	for _, b := range files {
-		base := path.Base(b)
+		base := prefix + path.Base(b)
 		target := path.Join(destination, base)
 
 		if err := os.Remove(target); err != nil && !os.IsNotExist(err) {

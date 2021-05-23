@@ -10,7 +10,6 @@ func main() {
 		Host:        "github",
 		Org:         "BurntSushi",
 		Project:     "ripgrep",
-		Version:     common.VersionLatestRelease(),
 		Destination: common.NewDestination("~/tmp/gr"),
 	}
 
@@ -22,7 +21,6 @@ func main() {
 		Host:        "github",
 		Org:         "dandavison",
 		Project:     "delta",
-		Version:     common.VersionLatestRelease(),
 		Destination: common.NewDestination("~/tmp/gr"),
 	}
 

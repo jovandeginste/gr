@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"path"
 )
 
@@ -13,6 +14,32 @@ type Destination struct {
 	ManPagesDir    string
 	TmpDir         string
 	CompletionDirs map[string]string
+}
+
+func (d *Destination) GetAllManDirs() []string {
+	var r []string
+
+	for i := 1; i < 9; i++ {
+		r = append(r, path.Join(d.ManPagesDir, fmt.Sprintf("man%d", i)))
+	}
+
+	return r
+}
+
+func NewLinuxRootDestination(root string) *Destination {
+	return &Destination{
+		Root:        root,
+		PackagesDir: path.Join(root, "var", "lib", "gr"),
+		BinDir:      path.Join(root, "usr", "bin"),
+		LibDir:      path.Join(root, "usr", "lib"),
+		ManPagesDir: path.Join(root, "usr", "share", "man"),
+		TmpDir:      path.Join(root, "tmp"),
+		CompletionDirs: map[string]string{
+			"bash": path.Join(root, "usr", "share", "bash-completion", "completions"),
+			"zsh":  path.Join(root, "usr", "share", "zsh", "vendor-completions"),
+			"fish": path.Join(root, "usr", "share", "fish", "vendor_completions.d"),
+		},
+	}
 }
 
 func NewDestination(root string) *Destination {
@@ -42,6 +69,7 @@ func (d *Destination) EnsureDirs() error {
 		d.GetManPagesDir(),
 	}
 
+	dirs = append(dirs, d.GetAllManDirs()...)
 	dirs = append(dirs, d.GetAllCompletionDirs()...)
 
 	for _, d := range dirs {
@@ -76,7 +104,7 @@ func (d *Destination) GetManPagesDir() string {
 func (d *Destination) GetAllCompletionDirs() []string {
 	res := []string{}
 
-	for k, _ := range d.CompletionDirs {
+	for k := range d.CompletionDirs {
 		res = append(res, d.GetCompletionDir(k))
 	}
 

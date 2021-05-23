@@ -9,12 +9,8 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-func isExec(mode os.FileMode) bool {
-	return mode&0o111 != 0
-}
-
 func expand(dir string) string {
-	dir, _ = homedir.Expand(dir)
+	dir, _ = homedir.Expand(dir) //nolint:errcheck
 
 	return dir
 }

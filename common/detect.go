@@ -1,6 +1,7 @@
 package common
 
 import (
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -34,7 +35,9 @@ func (r *Release) Detect(destination *Destination) error {
 	}
 
 	if err := d.detect(packageDir); err != nil {
-		return err
+		if err != io.EOF {
+			return err
+		}
 	}
 
 	if err := d.copyTo(destination); err != nil {

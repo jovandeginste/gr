@@ -18,7 +18,7 @@ func expand(dir string) string {
 }
 
 func isAppImage(file string) bool {
-	return strings.HasSuffix(file, ".AppImage")
+	return strings.HasSuffix(strings.ToLower(file), ".appimage")
 }
 
 func isArchive(file string) bool {
@@ -30,6 +30,7 @@ func isArchive(file string) bool {
 func moveAppImage(file, extractDir string) error {
 	b := path.Base(file)
 	b = strings.TrimSuffix(b, ".AppImage")
+	b = strings.TrimSuffix(b, ".appimage")
 
 	target := path.Join(extractDir, b)
 

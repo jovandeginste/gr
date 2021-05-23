@@ -43,7 +43,7 @@ func (a *Asset) MatchArch() bool {
 			return true
 		}
 
-		if strings.Contains(a.Name, "AppImage") {
+		if isAppImage(a.Name) {
 			return true
 		}
 	}
@@ -65,7 +65,7 @@ func (a *Asset) MatchOS() bool {
 }
 
 func (a *Asset) matchLinux() bool {
-	if strings.Contains(a.Name, "AppImage") {
+	if isAppImage(a.Name) {
 		return true
 	}
 

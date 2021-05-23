@@ -6,22 +6,17 @@ import (
 
 	"github.com/jovandeginste/gr/app"
 	"github.com/jovandeginste/gr/common"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var (
-	f      app.Fetcher
-	d      string
-	logger *logrus.Logger
+	d string
+
+	a = app.New()
+	f = a.Fetcher()
 )
 
 func main() {
-	logger = logrus.New()
-	f = app.Fetcher{
-		Logger: logger,
-	}
-
 	cmdRoot := &cobra.Command{
 		Use:   "gr",
 		Short: "Download and update software packages from Git",
@@ -48,10 +43,11 @@ func myInit(cmdRoot *cobra.Command) {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			f.Destination = common.NewDestination(d)
+			a.Destination = common.NewDestination(d)
+
 			f.ParseURL(args[0])
 			if err := f.Fetch(); err != nil {
-				logger.Fatal(err)
+				a.Logger.Fatal(err)
 			}
 		},
 	}

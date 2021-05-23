@@ -11,13 +11,20 @@ import (
 )
 
 type Fetcher struct {
-	Destination *common.Destination
-	Host        string
-	Project     string
-	Retry       bool
-	Version     *common.Version
-	Preferences *common.Preferences
-	Logger      *logrus.Logger
+	Host    string
+	Project string
+	Retry   bool
+	Version *common.Version
+
+	app *App
+}
+
+func (f *Fetcher) Destination() *common.Destination {
+	return f.app.Destination
+}
+
+func (f *Fetcher) Logger() *logrus.Logger {
+	return f.app.Logger
 }
 
 func (f *Fetcher) ParseURL(u string) error {
@@ -50,10 +57,6 @@ func (f *Fetcher) init() {
 	if f.Version == nil {
 		f.Version = common.VersionLatestRelease()
 	}
-
-	if f.Logger == nil {
-		f.Logger = logrus.New()
-	}
 }
 
 func (f *Fetcher) Fetch() error {
@@ -64,7 +67,7 @@ func (f *Fetcher) Fetch() error {
 		err error
 	)
 
-	f.Logger.Infof("Fetching '%s'...", f.Name())
+	f.Logger().Infof("Fetching '%s'...", f.Name())
 
 	switch f.Host {
 	case github.Name:
@@ -77,7 +80,7 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	r.Logger = f.Logger
+	r.Logger = f.Logger()
 
 	if r == nil {
 		return common.ErrNoMatchingRelease
@@ -85,17 +88,17 @@ func (f *Fetcher) Fetch() error {
 
 	r.PackageName = f.Name()
 
-	if r.Exists(f.Destination) {
+	if r.Exists(f.Destination()) {
 		if !f.Retry {
 			return fmt.Errorf("%w: %s/%s", common.ErrAlreadyDownloaded, r.PackageName, r.Version)
 		}
 
-		if err = r.Purge(f.Destination); err != nil {
+		if err = r.Purge(f.Destination()); err != nil {
 			return err
 		}
 	}
 
-	if err = f.Destination.EnsureDirs(); err != nil {
+	if err = f.Destination().EnsureDirs(); err != nil {
 		return err
 	}
 
@@ -104,19 +107,19 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	if err := a.DownloadTo(f.Destination); err != nil {
+	if err := a.DownloadTo(f.Destination()); err != nil {
 		return err
 	}
 
-	if err := r.DownloadSourceArchiveTo(f.Destination); err != nil {
+	if err := r.DownloadSourceArchiveTo(f.Destination()); err != nil {
 		return err
 	}
 
-	if err := r.Detect(f.Destination); err != nil {
+	if err := r.Detect(f.Destination()); err != nil {
 		return err
 	}
 
-	f.Logger.Infof("Successfully fetched '%s'", f.Name())
+	f.Logger().Infof("Successfully fetched '%s'", f.Name())
 
 	return nil
 }
@@ -124,8 +127,8 @@ func (f *Fetcher) Fetch() error {
 func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
 	for _, a := range r.Assets {
 		if a.MatchSystem() {
-			if f.Preferences == nil || f.Preferences.MatchAsset(a) {
-				a.Logger = f.Logger
+			if f.app.Preferences == nil || f.app.Preferences.MatchAsset(a) {
+				a.Logger = f.Logger()
 				a.PackageName = f.Name()
 				a.Version = r.Version
 
@@ -138,7 +141,7 @@ func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
 }
 
 func (f *Fetcher) fetchGithub() (*common.Release, error) {
-	return github.Fetch(f.Logger, f.Project, f.Version)
+	return github.Fetch(f.Logger(), f.Project, f.Version)
 }
 
 func (f *Fetcher) Name() string {

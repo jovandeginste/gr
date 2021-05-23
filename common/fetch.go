@@ -48,8 +48,8 @@ func Download(l *logrus.Logger, url string, target string) error {
 		return err
 	}
 
-	l.Infof("Downloading '%s' (%d bytes)...", url, s)
-	l.Infof("To '%s'...", target)
+	l.Tracef("Downloading '%s' (%d bytes)...", url, s)
+	l.Tracef("To '%s'...", target)
 
 	if res == nil {
 		return nil

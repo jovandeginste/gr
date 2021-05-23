@@ -72,7 +72,7 @@ func (r *Release) DownloadSourceArchiveTo(destination *Destination) error {
 		return err
 	}
 
-	r.Logger.Infof("Unpacking in '%s'...", extractDir)
+	r.Logger.Debugf("Unpacking in '%s'...", extractDir)
 
 	if err := unpack(file, extractDir); err != nil {
 		return err

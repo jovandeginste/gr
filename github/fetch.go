@@ -9,16 +9,16 @@ const (
 	Name = "github"
 )
 
-func releasesURLFor(org, project string) string {
-	return "https://api.github.com/repos/" + org + "/" + project + "/releases"
+func releasesURLFor(project string) string {
+	return "https://api.github.com/repos/" + project + "/releases"
 }
 
 func (r *release) archiveURL() string {
 	return r.TarballURL
 }
 
-func Fetch(l *logrus.Logger, org, project string, version *common.Version) (*common.Release, error) {
-	url := releasesURLFor(org, project)
+func Fetch(l *logrus.Logger, project string, version *common.Version) (*common.Release, error) {
+	url := releasesURLFor(project)
 
 	l.Debugf("URL is: '%s'", url)
 

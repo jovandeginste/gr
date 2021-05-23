@@ -1,5 +1,11 @@
 # github.com/andybalholm/brotli v1.0.0
 github.com/andybalholm/brotli
+# github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6
+## explicit
+# github.com/coreos/go-etcd v2.0.0+incompatible
+## explicit
+# github.com/cpuguy83/go-md2man v1.0.10
+## explicit
 # github.com/dsnet/compress v0.0.1
 github.com/dsnet/compress
 github.com/dsnet/compress/bzip2
@@ -31,6 +37,8 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-retryablehttp v0.7.0
 ## explicit
 github.com/hashicorp/go-retryablehttp
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
 # github.com/klauspost/compress v1.10.10
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
@@ -61,7 +69,14 @@ github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
+# github.com/spf13/cobra v1.1.3
+## explicit
+github.com/spf13/cobra
+# github.com/spf13/pflag v1.0.5
+github.com/spf13/pflag
 # github.com/stretchr/testify v1.7.0
+## explicit
+# github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8
 ## explicit
 # github.com/ulikunitz/xz v0.5.10
 ## explicit
@@ -71,6 +86,8 @@ github.com/ulikunitz/xz/internal/xlog
 github.com/ulikunitz/xz/lzma
 # github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 github.com/xi2/xz
+# github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77
+## explicit
 # golang.org/x/mod v0.4.2
 ## explicit
 golang.org/x/mod/semver

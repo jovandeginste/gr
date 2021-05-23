@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,12 +9,14 @@ import (
 
 	"github.com/go-enry/go-enry/v2"
 	"github.com/h2non/filetype/types"
+	"github.com/sirupsen/logrus"
 )
 
 var shells = []string{"bash", "fish", "zsh"}
 
 type detector struct {
 	name        string
+	logger      *logrus.Logger
 	binaries    []string
 	libraries   []string
 	manPages    map[string][]string
@@ -27,6 +28,7 @@ func (r *Release) Detect(destination *Destination) error {
 
 	d := detector{
 		name:        r.PackageName,
+		logger:      r.Logger,
 		manPages:    map[string][]string{},
 		completions: map[string][]string{},
 	}
@@ -95,8 +97,8 @@ func (d *detector) addToCatalog(file string, lang string, elfInfo types.Type) {
 		}
 	}
 
-	fmt.Println(file, lang)
-	fmt.Printf("%#v\n", elfInfo)
+	d.logger.Tracef("Language of '%s': '%s'", file, lang)
+	d.logger.Tracef("Binary information for '%s': %#v", file, elfInfo)
 }
 
 func (d *detector) addManPage(file string) {
@@ -118,24 +120,22 @@ func (d *detector) addManPage(file string) {
 }
 
 func (d *detector) copyTo(destination *Destination) error {
-	fmt.Printf("%#v\n", d)
-
-	if err := linkAll(d.binaries, destination.GetBinDir(), ""); err != nil {
+	if err := d.linkAll(d.binaries, destination.GetBinDir(), ""); err != nil {
 		return err
 	}
 
 	for k, v := range d.manPages {
-		if err := linkAll(v, path.Join(destination.GetManPagesDir(), k), ""); err != nil {
+		if err := d.linkAll(v, path.Join(destination.GetManPagesDir(), k), ""); err != nil {
 			return err
 		}
 	}
 
-	if err := linkAll(d.libraries, destination.GetLibDir(), ""); err != nil {
+	if err := d.linkAll(d.libraries, destination.GetLibDir(), ""); err != nil {
 		return err
 	}
 
 	for k, v := range d.completions {
-		if err := linkAll(v, destination.GetCompletionDir(k), d.name+"."); err != nil {
+		if err := d.linkAll(v, destination.GetCompletionDir(k), d.name+"."); err != nil {
 			return err
 		}
 	}
@@ -143,7 +143,7 @@ func (d *detector) copyTo(destination *Destination) error {
 	return nil
 }
 
-func linkAll(files []string, destination string, prefix string) error {
+func (d *detector) linkAll(files []string, destination string, prefix string) error {
 	for _, b := range files {
 		base := prefix + path.Base(b)
 		target := path.Join(destination, base)
@@ -152,6 +152,7 @@ func linkAll(files []string, destination string, prefix string) error {
 			return err
 		}
 
+		d.logger.Infof("Linking: '%s' to '%s'", b, target)
 		if err := os.Link(b, target); err != nil {
 			return err
 		}

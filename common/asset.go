@@ -103,7 +103,7 @@ func (a *Asset) DownloadTo(destination *Destination) error {
 		return err
 	}
 
-	a.Logger.Infof("Unpacking in '%s'...", extractDir)
+	a.Logger.Debugf("Unpacking in '%s'...", extractDir)
 
 	return unpack(file, extractDir)
 }

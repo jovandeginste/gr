@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/jovandeginste/gr/common"
@@ -12,11 +13,36 @@ import (
 type Fetcher struct {
 	Destination *common.Destination
 	Host        string
-	Org         string
 	Project     string
 	Version     *common.Version
 	Preferences *common.Preferences
 	Logger      *logrus.Logger
+}
+
+func (f *Fetcher) ParseURL(u string) error {
+	if !strings.Contains(u, "://") {
+		u = "https://" + u
+	}
+
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return err
+	}
+
+	f.detectHost(parsed.Host)
+	f.Project = strings.Trim(parsed.Path, "/")
+
+	f.init()
+
+	return nil
+}
+
+func (f *Fetcher) detectHost(h string) {
+	if h == "github.com" || strings.HasSuffix(h, ".github.com") {
+		f.Host = "github"
+
+		return
+	}
 }
 
 func (f *Fetcher) init() {
@@ -37,6 +63,8 @@ func (f *Fetcher) Fetch() error {
 		err error
 	)
 
+	f.Logger.Infof("Fetching '%s'...", f.Name())
+
 	switch f.Host {
 	case github.Name:
 		r, err = f.fetchGithub()
@@ -44,11 +72,11 @@ func (f *Fetcher) Fetch() error {
 		return fmt.Errorf("%w: '%s'", common.ErrHostNotKnown, f.Host)
 	}
 
-	r.Logger = f.Logger
-
 	if err != nil {
 		return err
 	}
+
+	r.Logger = f.Logger
 
 	if r == nil {
 		return common.ErrNoMatchingRelease
@@ -79,7 +107,13 @@ func (f *Fetcher) Fetch() error {
 		return err
 	}
 
-	return r.Detect(f.Destination)
+	if err := r.Detect(f.Destination); err != nil {
+		return err
+	}
+
+	f.Logger.Infof("Successfully fetched '%s'", f.Name())
+
+	return nil
 }
 
 func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
@@ -99,9 +133,9 @@ func (f *Fetcher) findAsset(r *common.Release) (*common.Asset, error) {
 }
 
 func (f *Fetcher) fetchGithub() (*common.Release, error) {
-	return github.Fetch(f.Logger, f.Org, f.Project, f.Version)
+	return github.Fetch(f.Logger, f.Project, f.Version)
 }
 
 func (f *Fetcher) Name() string {
-	return strings.Join([]string{f.Host, f.Org, f.Project}, ".")
+	return strings.Join([]string{f.Host, strings.ReplaceAll(f.Project, "/", ".")}, ".")
 }

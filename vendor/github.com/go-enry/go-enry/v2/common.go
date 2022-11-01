@@ -3,6 +3,8 @@ package enry
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -108,13 +110,6 @@ func getFirstLanguageAndSafe(languages []string) (language string, safe bool) {
 	language = firstLanguage(languages)
 	safe = len(languages) == 1
 	return
-}
-
-// getLanguageBySpecificClassifier returns the most probably language for the given content using
-// classifier to detect language.
-func getLanguageBySpecificClassifier(content []byte, candidates []string, classifier classifier) (language string, safe bool) {
-	languages := getLanguagesBySpecificClassifier(content, candidates, classifier)
-	return getFirstLanguageAndSafe(languages)
 }
 
 // GetLanguages applies a sequence of strategies based on the given filename and content
@@ -299,9 +294,11 @@ func GetLanguagesByShebang(_ string, content []byte, _ []string) (languages []st
 var (
 	shebangExecHack = regex.MustCompile(`exec (\w+).+\$0.+\$@`)
 	pythonVersion   = regex.MustCompile(`python\d\.\d+`)
+	envOptArgs      = regex.MustCompile(`-[i0uCSv]*|--\S+`)
+	envVarArgs      = regex.MustCompile(`\S+=\S+`)
 )
 
-func getInterpreter(data []byte) (interpreter string) {
+func getInterpreter(data []byte) string {
 	line := getFirstLine(data)
 	if !hasShebang(line) {
 		return ""
@@ -314,13 +311,24 @@ func getInterpreter(data []byte) (interpreter string) {
 		return ""
 	}
 
-	if bytes.Contains(splitted[0], []byte("env")) {
-		if len(splitted) > 1 {
-			interpreter = string(splitted[1])
+	// Extract interpreter name from path. Use path.Base because
+	// shebang on Cygwin/Windows still use a forward slash
+	interpreter := path.Base(string(splitted[0]))
+
+	// #!/usr/bin/env [...]
+	if interpreter == "env" {
+		if len(splitted) == 1 {
+			// /usr/bin/env with no arguments
+			return ""
 		}
-	} else {
-		splittedPath := bytes.Split(splitted[0], []byte{'/'})
-		interpreter = string(splittedPath[len(splittedPath)-1])
+		for len(splitted) > 2 {
+			if envOptArgs.Match(splitted[1]) || envVarArgs.Match(splitted[1]) {
+				splitted = append(splitted[:1], splitted[2:]...)
+				continue
+			}
+			break
+		}
+		interpreter = path.Base(string(splitted[1]))
 	}
 
 	if interpreter == "sh" {
@@ -337,7 +345,7 @@ func getInterpreter(data []byte) (interpreter string) {
 		interpreter = ""
 	}
 
-	return
+	return interpreter
 }
 
 func getFirstLines(content []byte, count int) []byte {
@@ -515,11 +523,11 @@ type Type int
 
 // Type's values.
 const (
-	Unknown Type = iota
-	Data
-	Programming
-	Markup
-	Prose
+	Unknown     Type = Type(data.TypeUnknown)
+	Data             = Type(data.TypeData)
+	Programming      = Type(data.TypeProgramming)
+	Markup           = Type(data.TypeMarkup)
+	Prose            = Type(data.TypeProse)
 )
 
 // GetLanguageType returns the type of the given language.
@@ -550,4 +558,23 @@ func GetLanguageGroup(language string) string {
 	}
 
 	return ""
+}
+
+// GetLanguageInfo returns the LanguageInfo for a given language name, or an error if not found.
+func GetLanguageInfo(language string) (data.LanguageInfo, error) {
+	id, ok := GetLanguageID(language)
+	if !ok {
+		return data.LanguageInfo{}, fmt.Errorf("language %q not found", language)
+	}
+
+	return GetLanguageInfoByID(id)
+}
+
+// GetLanguageInfoByID returns the LanguageInfo for a given language ID, or an error if not found.
+func GetLanguageInfoByID(id int) (data.LanguageInfo, error) {
+	if info, ok := data.LanguageInfoByID[id]; ok {
+		return info, nil
+	}
+
+	return data.LanguageInfo{}, fmt.Errorf("language %q not found", id)
 }

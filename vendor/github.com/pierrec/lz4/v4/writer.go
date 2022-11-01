@@ -35,6 +35,7 @@ type Writer struct {
 	data    []byte                    // pending data
 	idx     int                       // size of pending data
 	handler func(int)
+	legacy  bool
 }
 
 func (*Writer) private() {}
@@ -48,12 +49,12 @@ func (w *Writer) Apply(options ...Option) (err error) {
 	default:
 		return lz4errors.ErrOptionClosedOrError
 	}
+	w.Reset(w.src)
 	for _, o := range options {
 		if err = o(w); err != nil {
 			return
 		}
 	}
-	w.Reset(w.src)
 	return
 }
 
@@ -63,7 +64,7 @@ func (w *Writer) isNotConcurrent() bool {
 
 // init sets up the Writer when in newState. It does not change the Writer state.
 func (w *Writer) init() error {
-	w.frame.InitW(w.src, w.num)
+	w.frame.InitW(w.src, w.num, w.legacy)
 	size := w.frame.Descriptor.Flags.BlockSizeIndex()
 	w.data = size.Get()
 	w.idx = 0
@@ -86,7 +87,7 @@ func (w *Writer) Write(buf []byte) (n int, err error) {
 
 	zn := len(w.data)
 	for len(buf) > 0 {
-		if w.idx == 0 && len(buf) >= zn {
+		if w.isNotConcurrent() && w.idx == 0 && len(buf) >= zn {
 			// Avoid a copy as there is enough data for a block.
 			if err = w.write(buf[:zn], false); err != nil {
 				return
@@ -126,27 +127,25 @@ func (w *Writer) write(data []byte, safe bool) error {
 		w.handler(len(block.Data))
 		return err
 	}
-	size := w.frame.Descriptor.Flags.BlockSizeIndex()
 	c := make(chan *lz4stream.FrameDataBlock)
 	w.frame.Blocks.Blocks <- c
-	go func(c chan *lz4stream.FrameDataBlock, data []byte, size lz4block.BlockSizeIndex, safe bool) {
-		b := lz4stream.NewFrameDataBlock(size)
+	go func(c chan *lz4stream.FrameDataBlock, data []byte, safe bool) {
+		b := lz4stream.NewFrameDataBlock(w.frame)
 		c <- b.Compress(w.frame, data, w.level)
 		<-c
 		w.handler(len(b.Data))
-		b.CloseW(w.frame)
+		b.Close(w.frame)
 		if safe {
 			// safe to put it back as the last usage of it was FrameDataBlock.Write() called before c is closed
-			size.Put(data)
+			lz4block.Put(data)
 		}
-	}(c, data, size, safe)
+	}(c, data, safe)
 
 	return nil
 }
 
-// Close closes the Writer, flushing any unwritten data to the underlying io.Writer,
-// but does not close the underlying io.Writer.
-func (w *Writer) Close() (err error) {
+// Flush any buffered data to the underlying writer immediately.
+func (w *Writer) Flush() (err error) {
 	switch w.state.state {
 	case writeState:
 	case errorState:
@@ -154,7 +153,7 @@ func (w *Writer) Close() (err error) {
 	default:
 		return nil
 	}
-	defer w.state.nextd(&err)
+
 	if w.idx > 0 {
 		// Flush pending data, disable w.data freeing as it is done later on.
 		if err = w.write(w.data[:w.idx], false); err != nil {
@@ -162,14 +161,22 @@ func (w *Writer) Close() (err error) {
 		}
 		w.idx = 0
 	}
-	err = w.frame.CloseW(w.src, w.num)
+	return nil
+}
+
+// Close closes the Writer, flushing any unwritten data to the underlying writer
+// without closing it.
+func (w *Writer) Close() error {
+	if err := w.Flush(); err != nil {
+		return err
+	}
+	err := w.frame.CloseW(w.src, w.num)
 	// It is now safe to free the buffer.
 	if w.data != nil {
-		size := w.frame.Descriptor.Flags.BlockSizeIndex()
-		size.Put(w.data)
+		lz4block.Put(w.data)
 		w.data = nil
 	}
-	return
+	return err
 }
 
 // Reset clears the state of the Writer w such that it is equivalent to its
@@ -204,13 +211,13 @@ func (w *Writer) ReadFrom(r io.Reader) (n int64, err error) {
 	data := size.Get()
 	if w.isNotConcurrent() {
 		// Keep the same buffer for the whole process.
-		defer size.Put(data)
+		defer lz4block.Put(data)
 	}
 	for !done {
 		rn, err = io.ReadFull(r, data)
 		switch err {
 		case nil:
-		case io.EOF:
+		case io.EOF, io.ErrUnexpectedEOF: // read may be partial
 			done = true
 		default:
 			return
@@ -227,6 +234,5 @@ func (w *Writer) ReadFrom(r io.Reader) (n int64, err error) {
 			data = size.Get()
 		}
 	}
-	err = w.Close()
 	return
 }

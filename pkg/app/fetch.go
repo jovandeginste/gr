@@ -13,7 +13,6 @@ import (
 type Fetcher struct {
 	Host    string
 	Project string
-	Retry   bool
 	Version *common.Version
 
 	app *App
@@ -91,7 +90,7 @@ func (f *Fetcher) Fetch() error {
 	r.PackageName = f.Name()
 
 	if r.Exists(f.Destination()) {
-		if !f.Retry {
+		if !f.app.Configuration.Retry {
 			return fmt.Errorf("%w: %s/%s", common.ErrAlreadyDownloaded, r.PackageName, r.Version)
 		}
 

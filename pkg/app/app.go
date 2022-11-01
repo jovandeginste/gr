@@ -8,15 +8,19 @@ import (
 )
 
 type App struct {
-	Destination *common.Destination
-	Preferences *common.Preferences
-	Logger      *logrus.Logger
+	Destination   *common.Destination
+	Preferences   *common.Preferences
+	Logger        *logrus.Logger
+	Configuration Configuration
 }
 
-func New() *App {
+func New(cfg Configuration) *App {
 	a := App{
-		Logger: logrus.New(),
+		Configuration: cfg,
+		Logger:        logrus.New(),
 	}
+
+	a.SetDestination(cfg.RootDirectory)
 
 	return &a
 }
@@ -25,12 +29,15 @@ func (a *App) SetDestination(root string) {
 	a.Destination = common.NewDestination(root)
 }
 
-func (a *App) Fetcher() *Fetcher {
+func (a *App) NewFetcher(url string) (*Fetcher, error) {
 	f := Fetcher{
 		app: a,
 	}
+	if err := f.ParseURL(url); err != nil {
+		return nil, err
+	}
 
-	return &f
+	return &f, nil
 }
 
 func (a *App) List() []string {

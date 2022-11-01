@@ -4,17 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jovandeginste/gr/app"
+	"github.com/jovandeginste/gr/pkg/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var (
-	d string
-
-	a = app.New()
-	f = a.Fetcher()
-)
+var a = app.New()
 
 func main() {
 	cmdRoot := &cobra.Command{
@@ -24,15 +19,16 @@ func main() {
 
 	myInit(cmdRoot)
 
-	a.SetDestination(d)
-
 	if err := cmdRoot.Execute(); err != nil {
 		log().Fatal(err)
 	}
 }
 
 func myInit(cmdRoot *cobra.Command) {
+	var d string
+
 	cmdRoot.PersistentFlags().StringVar(&d, "installation-root", "~/.gr", "Location where all software is installed")
+	a.SetDestination(d)
 
 	cmdFetch := &cobra.Command{
 		Use:   "fetch",
@@ -48,7 +44,8 @@ func myInit(cmdRoot *cobra.Command) {
 			parse(args[0])
 		},
 	}
-	cmdFetch.Flags().BoolVar(&f.Retry, "retry", false, "Whether to remove existing version")
+
+	cmdFetch.Flags().BoolVar(&a.Fetcher().Retry, "retry", false, "Whether to remove existing version")
 
 	cmdList := &cobra.Command{
 		Use:   "list",
@@ -67,11 +64,11 @@ func log() *logrus.Logger {
 }
 
 func parse(u string) {
-	if err := f.ParseURL(u); err != nil {
+	if err := a.Fetcher().ParseURL(u); err != nil {
 		log().Fatal(err)
 	}
 
-	if err := f.Fetch(); err != nil {
+	if err := a.Fetcher().Fetch(); err != nil {
 		log().Fatal(err)
 	}
 }

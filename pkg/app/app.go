@@ -3,7 +3,7 @@ package app
 import (
 	"io/ioutil"
 
-	"github.com/jovandeginste/gr/common"
+	"github.com/jovandeginste/gr/pkg/common"
 	"github.com/sirupsen/logrus"
 )
 

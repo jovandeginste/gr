@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/jovandeginste/gr/common"
-	"github.com/jovandeginste/gr/github"
+	"github.com/jovandeginste/gr/pkg/common"
+	"github.com/jovandeginste/gr/pkg/github"
 	"github.com/sirupsen/logrus"
 )
 
